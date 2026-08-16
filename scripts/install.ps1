@@ -1,4 +1,4 @@
-# 鲲鹏智育 Kunpeng SmartBreed — 安装到 DeepSeek Harness (Windows)
+﻿# 鲲鹏智育 Kunpeng SmartBreed — 安装到 DeepSeek Harness (Windows)
 
 $ErrorActionPreference = "Stop"
 
