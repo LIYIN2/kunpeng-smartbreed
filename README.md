@@ -6,7 +6,7 @@
   <img src="assets/kunpeng-logo-512.png" width="160" alt="鲲鹏智育 Logo">
 </p>
 
-> 名字由来：**鲲鹏** —— 取《庄子·逍遥游》「北冥有鱼，其名为鲲……化而为鸟，其名为鹏」。**鲲** 是大鱼，**鹏** 是徐鹏老师课题组，暗合「大黄鱼 + 遗传育种」的身份；**智育** —— AI 智慧育种。
+> 名字由来：**鲲鹏** —— 取《庄子·逍遥游》「北冥有鱼，其名为鲲……化而为鸟，其名为鹏」。**智育** —— AI 智慧育种。
 > English: **Kun** = the great fish, **Peng** = Prof. Xu Peng's lab, **SmartBreed** = AI-driven breeding.
 
 ## 它是什么
