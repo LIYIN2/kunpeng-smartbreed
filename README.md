@@ -7,7 +7,7 @@
 </p>
 
 > 名字由来：**鲲鹏** —— 取《庄子·逍遥游》「北冥有鱼，其名为鲲……化而为鸟，其名为鹏」。**智育** —— AI 智慧育种。
-> English: **Kun** = the great fish, **Peng** = Prof. Xu Peng's lab, **SmartBreed** = AI-driven breeding.
+> English: **Kun** = the great fish,  **SmartBreed** = AI-driven breeding.
 
 ## 它是什么
 
