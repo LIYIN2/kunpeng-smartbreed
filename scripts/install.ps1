@@ -7,12 +7,11 @@ $Here = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 # 定位 dsh 目录
 $DshDir = $env:DSH_DIR
 if (-not $DshDir) {
-    $RuntimeDsh = Join-Path $env:USERPROFILE ".dsh
-untimedsh"
-    if (Test-Path (Join-Path $RuntimeDsh "appscli")) {
+    $RuntimeDsh = Join-Path $env:USERPROFILE ".dsh\runtime\dsh"
+    if (Test-Path (Join-Path $RuntimeDsh "apps\cli")) {
         $DshDir = $RuntimeDsh
-    } elseif (Test-Path (Join-Path $Here "..dshappscli")) {
-        $DshDir = Join-Path $Here "..dsh"
+    } elseif (Test-Path (Join-Path $Here "..\dsh\apps\cli")) {
+        $DshDir = Join-Path $Here "..\dsh"
     } else {
         Write-Host "错误：找不到 dsh 目录。请设置环境变量 DSH_DIR 指向 dsh 源码目录。" -ForegroundColor Red
         exit 1
@@ -28,12 +27,12 @@ Write-Host "安装到: $DshDir"
 # 1. 安装预设
 if (Test-Path $PresetDir) {
     Copy-Item -Recurse -Force (Join-Path $Here "presets\kunpeng-smartbreed") $PresetDir
-    Write-Host "✓ 预设已安装: 鲲鹏智育" -ForegroundColor Green
+    Write-Host "预设已安装: 鲲鹏智育" -ForegroundColor Green
 } else {
     Write-Warning "未找到 agent-presets 目录，跳过预设安装: $PresetDir"
 }
 
-# 2. 安装技能
+# 2. 安装技能与知识库
 if (Test-Path $SkillDir) {
     New-Item -ItemType Directory -Force -Path $KnowledgeDir | Out-Null
     Get-ChildItem (Join-Path $Here "skills") -Directory -Filter "kunpeng-*" | ForEach-Object {
@@ -42,8 +41,8 @@ if (Test-Path $SkillDir) {
     Get-ChildItem (Join-Path $Here "knowledge\md") -Filter "*.md" | ForEach-Object {
         Copy-Item -Force $_.FullName $KnowledgeDir
     }
-    Write-Host "✓ 技能已安装: kunpeng-literature / kunpeng-workflow / kunpeng-governance / kunpeng-mating / kunpeng-knowledge" -ForegroundColor Green
-    Write-Host "✓ 知识库已安装: $KnowledgeDir" -ForegroundColor Green
+    Write-Host "技能已安装: kunpeng-literature / kunpeng-workflow / kunpeng-governance / kunpeng-mating / kunpeng-knowledge" -ForegroundColor Green
+    Write-Host "知识库已安装: $KnowledgeDir" -ForegroundColor Green
 } else {
     Write-Warning "未找到 skills 目录，跳过技能安装: $SkillDir"
 }
