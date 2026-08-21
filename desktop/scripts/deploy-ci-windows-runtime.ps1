@@ -12,7 +12,7 @@ if (Test-Path $RuntimeRoot) { Remove-Item $RuntimeRoot -Recurse -Force }
 
 Push-Location $SourceRoot
 try {
-  pnpm --filter @deepseek-ai/dsh deploy --prod --legacy $RuntimeRoot
+  pnpm --filter @deepseek-ai/dsh deploy --prod $RuntimeRoot
 } finally {
   Pop-Location
 }
@@ -24,12 +24,19 @@ $required = @(
   (Join-Path $RuntimeRoot 'node_modules'),
   (Join-Path $RuntimeRoot 'lib\bin.js'),
   (Join-Path $RuntimeRoot 'config'),
+  (Join-Path $RuntimeRoot 'node_modules\@deepseek-ai\dsh-web-app\lib\index.js'),
   (Join-Path $RuntimeRoot '.agents\skills'),
   (Join-Path $RuntimeRoot '.agents\knowledge')
 )
 $missing = $required | Where-Object { -not (Test-Path $_) }
 if ($missing.Count -gt 0) {
   throw "Production runtime is incomplete: $($missing -join ', ')"
+}
+
+$webApp = (Resolve-Path (Join-Path $RuntimeRoot 'node_modules\@deepseek-ai\dsh-web-app')).Path
+$runtimePrefix = (Resolve-Path $RuntimeRoot).Path + [IO.Path]::DirectorySeparatorChar
+if (-not $webApp.StartsWith($runtimePrefix, [StringComparison]::OrdinalIgnoreCase)) {
+  throw "Workspace dependency escaped the production runtime: $webApp"
 }
 
 $sourceBytes = (Get-ChildItem $SourceRoot -Recurse -File | Measure-Object Length -Sum).Sum
