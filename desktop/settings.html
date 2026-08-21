@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #0b0b0f;
+      color: #f5f5f7;
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      width: 420px;
+      padding: 22px 26px;
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 4px;
+    }
+    .sub {
+      font-size: 12px;
+      color: #8a8a94;
+      margin-bottom: 16px;
+    }
+    .section {
+      border: 1px solid #23232e;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      background: #101018;
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex: none;
+    }
+    .dot.aizex { background: #3ecf8e; }
+    label {
+      display: block;
+      font-size: 12px;
+      color: #c8c8d0;
+      margin: 10px 0 4px;
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 11px;
+      border-radius: 8px;
+      border: 1px solid #2a2a34;
+      background: #15151c;
+      color: #f5f5f7;
+      font-size: 13px;
+      outline: none;
+    }
+    input:focus { border-color: #4d6bfe; }
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    .row .grow { flex: 1; }
+    .btn {
+      margin-top: 12px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      color: #fff;
+      white-space: nowrap;
+      height: 34px;
+    }
+    .btn.aizex { background: #2aa875; }
+    .btn.aizex:hover { background: #239264; }
+    .status {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #7ee2a0;
+      min-height: 14px;
+    }
+    .status.err { color: #f08080; }
+    .note {
+      margin-top: 6px;
+      font-size: 10.5px;
+      line-height: 1.6;
+      color: #6f6f7a;
+    }
+    .prov-list { display: flex; flex-direction: column; gap: 10px; }
+    .prov-card {
+      border: 1px solid #2a2a34;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #14141c;
+    }
+    .prov-card .row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+    .prov-card .row input { flex: 1; }
+    .prov-card .del {
+      flex: none;
+      background: transparent;
+      border: 1px solid #5a2026;
+      color: #f08080;
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .prov-card .del:hover { background: #2a1518; }
+    .add-prov {
+      margin-top: 10px;
+      width: 100%;
+      padding: 8px;
+      border: 1px dashed #3a3a48;
+      border-radius: 8px;
+      background: transparent;
+      color: #a8a8b5;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .add-prov:hover { border-color: #4d6bfe; color: #c8d0ff; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>配置</h1>
+    <div class="sub">账号信息仅保存在本机,用于自动填充登录,不会上传到任何服务器。</div>
+
+    <div class="section">
+      <div class="section-title"><span class="dot aizex"></span>Aizex 账号</div>
+      <label for="aizex-email">邮箱</label>
+      <input id="aizex-email" type="text" placeholder="请输入邮箱" autocomplete="off">
+      <label for="aizex-password">密码</label>
+      <input id="aizex-password" type="password" placeholder="请输入密码">
+      <button class="btn aizex" id="save-aizex">保存 Aizex</button>
+      <div class="status" id="status-aizex"></div>
+      <div class="note">打开「Aizex 聊天」登录页时自动填充。</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="dot music"></span>自定义 API(聊天用)</div>
+      <div class="prov-list" id="prov-list"></div>
+      <button class="add-prov" id="add-prov">+ 添加 API</button>
+      <button class="btn music" id="save-prov" style="margin-top:12px;">保存 API</button>
+      <div class="status" id="status-prov"></div>
+      <div class="note">填写 OpenAI 兼容的 Base URL(如 https://www.arccodex.com/api/v1)与模型列表,保存后在聊天窗口选择使用。Key 在聊天窗口「Key 设置」里单独填。</div>
+    </div>
+
+  </div>
+  <script>
+    const aizexEmail = document.getElementById('aizex-email');
+    const aizexPwd = document.getElementById('aizex-password');
+    const statusAizex = document.getElementById('status-aizex');
+
+    window.dshAizex.getAccount().then((a) => {
+      if (a) {
+        aizexEmail.value = a.email || '';
+        aizexPwd.value = a.password || '';
+      }
+    });
+
+    document.getElementById('save-aizex').addEventListener('click', async () => {
+      const e = aizexEmail.value.trim();
+      const p = aizexPwd.value;
+      if (!e || !p) {
+        statusAizex.textContent = '请填写邮箱和密码';
+        statusAizex.className = 'status err';
+        return;
+      }
+      await window.dshAizex.saveAccount(e, p);
+      statusAizex.textContent = '已保存 ✓';
+      statusAizex.className = 'status';
+    });
+
+    // 自定义 API providers
+    const provList = document.getElementById('prov-list');
+    const statusProv = document.getElementById('status-prov');
+    let provs = [];
+
+    function renderProvs() {
+      provList.innerHTML = '';
+      provs.forEach((p, i) => {
+        const card = document.createElement('div');
+        card.className = 'prov-card';
+        card.innerHTML =
+          '<div class="row"><label style="flex:none;margin:0;">名称</label><input class="p-label" type="text" placeholder="如 Arc Codex"></div>' +
+          '<div class="row"><label style="flex:none;margin:0;">Base URL</label><input class="p-url" type="text" placeholder="https://.../chat/completions"></div>' +
+          '<div class="row"><label style="flex:none;margin:0;">默认模型</label><input class="p-model" type="text" placeholder="如 gpt-5-codex"></div>' +
+          '<div class="row"><label style="flex:none;margin:0;">模型列表</label><input class="p-models" type="text" placeholder="逗号分隔"></div>' +
+          '<div class="row" style="margin-bottom:0;"><span class="note" style="flex:1;">Key 在聊天窗口填</span><button class="del">删除</button></div>';
+        card.querySelector('.p-label').value = p.label || '';
+        card.querySelector('.p-url').value = p.baseUrl || '';
+        card.querySelector('.p-model').value = p.defaultModel || '';
+        card.querySelector('.p-models').value = (p.models || []).join(', ');
+        card.querySelector('.del').addEventListener('click', () => {
+          provs.splice(i, 1);
+          renderProvs();
+        });
+        provList.appendChild(card);
+      });
+    }
+
+    document.getElementById('add-prov').addEventListener('click', () => {
+      provs.push({ label: '', baseUrl: '', defaultModel: '', models: [] });
+      renderProvs();
+    });
+
+    document.getElementById('save-prov').addEventListener('click', async () => {
+      const out = [];
+      Array.from(provList.children).forEach((card) => {
+        const label = card.querySelector('.p-label').value.trim();
+        const baseUrl = card.querySelector('.p-url').value.trim();
+        const defaultModel = card.querySelector('.p-model').value.trim();
+        const modelsText = card.querySelector('.p-models').value;
+        const models = modelsText.split(/[,\uFF0C\n]/).map(function (s) { return s.trim(); }).filter(Boolean);
+        if (baseUrl) {
+          out.push({ id: 'custom' + Math.random().toString(36).slice(2, 8), label: label, baseUrl: baseUrl, defaultModel: defaultModel, models: models });
+        }
+      });
+      await window.dshChat.saveCustomProviders(out);
+      statusProv.textContent = '已保存 ✓';
+      statusProv.className = 'status';
+    });
+
+    window.dshChat.getCustomProviders().then((list) => {
+      provs = list && list.length ? list : [];
+      renderProvs();
+    });
+
+  </script>
+</body>
+</html>

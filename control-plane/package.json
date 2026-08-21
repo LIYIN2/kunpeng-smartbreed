@@ -1,0 +1,13 @@
+{
+  "name": "kunpeng-control-plane",
+  "version": "0.1.0",
+  "private": true,
+  "description": "鲲鹏智能体账号、审核、反馈与审计中心",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

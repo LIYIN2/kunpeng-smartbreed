@@ -1,0 +1,122 @@
+name: Build native Windows installer
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/windows-release.yml'
+      - 'desktop/**'
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-2025
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '25.8.1'
+          cache: 'npm'
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install desktop packager
+        working-directory: desktop
+        run: npm ci
+
+      - name: Prepare pinned Harness and Node runtime
+        shell: pwsh
+        run: desktop/scripts/prepare-ci-windows.ps1
+
+      - name: Install and build Harness on Windows
+        shell: pwsh
+        run: |
+          corepack enable
+          Set-Location desktop/bundle/dsh
+          pnpm install --frozen-lockfile
+          pnpm run build
+          Add-Content pnpm-workspace.yaml "`ninjectWorkspacePackages: true"
+          pnpm install --prefer-offline --no-frozen-lockfile
+
+      - name: Prune Harness to production runtime
+        shell: pwsh
+        run: desktop/scripts/deploy-ci-windows-runtime.ps1
+
+      - name: Verify offline runtime
+        shell: pwsh
+        run: |
+          $required = @(
+            'desktop/bundle/dsh-runtime/node_modules',
+            'desktop/bundle/dsh-runtime/lib/bin.js',
+            'desktop/bundle/dsh-runtime/.agents/skills',
+            'desktop/bundle/dsh-runtime/.agents/knowledge',
+            'desktop/bundle/node-win-x64/node.exe'
+          )
+          $missing = $required | Where-Object { -not (Test-Path $_) }
+          if ($missing.Count -gt 0) { throw "Missing offline runtime files: $($missing -join ', ')" }
+
+      - name: Build installer
+        working-directory: desktop
+        run: npm run dist:win
+
+      - name: Verify packaged login bridge
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem 'outputs/dist/win-unpacked/*.exe' |
+            Where-Object { $_.Name -notlike 'Uninstall*' } |
+            Select-Object -First 1
+          if (-not $exe) { throw 'Unpacked application executable not found' }
+          $stdout = Join-Path $env:RUNNER_TEMP 'kunpeng-control-selftest.out'
+          $stderr = Join-Path $env:RUNNER_TEMP 'kunpeng-control-selftest.err'
+          $env:DSH_CONTROL_SELF_TEST = '1'
+          $process = Start-Process -FilePath $exe.FullName -PassThru -Wait -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          Remove-Item Env:DSH_CONTROL_SELF_TEST
+          Get-Content $stdout
+          Get-Content $stderr
+          if ($process.ExitCode -ne 0 -or -not (Select-String -Path $stdout -Pattern '"hasBridge":true' -Quiet)) {
+            throw 'Packaged login bridge self-test failed'
+          }
+
+      - name: Verify bundled Harness startup
+        shell: pwsh
+        run: |
+          $resources = 'outputs/dist/win-unpacked/resources'
+          $node = Join-Path $resources 'node/node.exe'
+          $cli = Join-Path $resources 'dsh/lib/bin.js'
+          $stdout = Join-Path $env:RUNNER_TEMP 'kunpeng-harness.out'
+          $stderr = Join-Path $env:RUNNER_TEMP 'kunpeng-harness.err'
+          $process = Start-Process -FilePath $node -ArgumentList @($cli, 'web') -WorkingDirectory (Join-Path $resources 'dsh') -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          $ready = $false
+          try {
+            for ($i = 0; $i -lt 120; $i++) {
+              if ($process.HasExited) { break }
+              try {
+                $response = Invoke-WebRequest 'http://127.0.0.1:3080' -UseBasicParsing -TimeoutSec 1
+                if ($response.StatusCode -eq 200) { $ready = $true; break }
+              } catch { Start-Sleep -Seconds 1 }
+            }
+          } finally {
+            if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
+          }
+          $process.WaitForExit()
+          if (Test-Path $stdout) { Get-Content $stdout }
+          if (Test-Path $stderr) { Get-Content $stderr }
+          if (-not $ready) { throw "Bundled Windows Harness did not become ready on port 3080; exit=$($process.ExitCode)" }
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kunpeng-agent-windows
+          path: outputs/dist/Kunpeng-Agent-*-x64.exe
+          if-no-files-found: error
+
+      - name: Upload installer to tagged release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: outputs/dist/Kunpeng-Agent-*-x64.exe

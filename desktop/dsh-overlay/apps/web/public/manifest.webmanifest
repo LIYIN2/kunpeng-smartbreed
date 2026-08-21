@@ -1,0 +1,16 @@
+{
+  "id": "/",
+  "name": "鲲鹏智能体",
+  "short_name": "鲲鹏",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "icons": [
+    {
+      "src": "/kunpeng-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

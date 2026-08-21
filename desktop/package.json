@@ -1,0 +1,95 @@
+{
+  "name": "kunpeng-research-agent",
+  "version": "2.3.0",
+  "description": "鲲鹏智能体：面向大黄鱼遗传育种与日常科研办公的开放式 AI 工作台",
+  "main": "main.js",
+  "author": {
+    "name": "李寅",
+    "email": "liyin59375@gmail.com"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --mac",
+    "dist:win": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "latest",
+    "electron-builder": "latest"
+  },
+  "build": {
+    "appId": "cn.xmu.fishgenetics.kunpeng",
+    "productName": "鲲鹏智能体",
+    "artifactName": "Kunpeng-Agent-${version}-${arch}.${ext}",
+    "beforePack": "scripts/before-pack.js",
+    "afterPack": "scripts/after-pack.js",
+    "files": [
+      "main.js",
+      "preload.js",
+      "loading.html",
+      "login.html",
+      "about.html",
+      "chat.html",
+      "aizex-account.html",
+      "music.html",
+      "settings.html"
+      ,"build/icon.png"
+    ],
+    "directories": {
+      "output": "../outputs/dist"
+    },
+    "mac": {
+      "target": ["dmg", "dir"],
+      "category": "public.app-category.developer-tools",
+      "icon": "build/icon.png",
+      "extraResources": [
+        {
+          "from": "bundle/dsh",
+          "to": "dsh",
+          "filter": ["**/*", "!**/node_modules", "!**/node_modules/**/*", "!.pnpm-store", "!.pnpm-store/**/*"]
+        },
+        {
+          "from": "bundle/node-darwin-arm64",
+          "to": "node",
+          "filter": ["**/*"]
+        },
+        {
+          "from": "bundle/node-darwin-arm64/node_modules",
+          "to": "node/node_modules",
+          "filter": ["**/*"]
+        }
+      ]
+    },
+    "dmg": {
+      "title": "鲲鹏智能体"
+    },
+    "win": {
+      "target": ["nsis"],
+      "extraResources": [
+        {
+          "from": "bundle/dsh-runtime",
+          "to": "dsh",
+          "filter": ["**/*", "!**/.git", "!**/.git/**/*"]
+        },
+        {
+          "from": "bundle/node-win-x64",
+          "to": "node",
+          "filter": ["**/*"]
+        },
+        {
+          "from": "bundle/node-win-x64/node_modules",
+          "to": "node/node_modules",
+          "filter": ["**/*"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "warningsAsErrors": false,
+      "createDesktopShortcut": true,
+      "shortcutName": "鲲鹏智能体"
+    }
+  }
+}

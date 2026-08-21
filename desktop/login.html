@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>登录鲲鹏智能体</title>
+  <style>
+    :root{font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;color:#13313b;background:#eaf4f6}*{box-sizing:border-box}body{min-height:100vh;margin:0;display:grid;place-items:center;background:radial-gradient(circle at 20% 15%,#bcebf0 0,transparent 34%),linear-gradient(145deg,#edf8f9,#dcecef)}.card{width:min(430px,92vw);padding:30px;border:1px solid #c7dfe4;border-radius:22px;background:#ffffffee;box-shadow:0 24px 70px #14526622}.brand{display:flex;align-items:center;gap:12px;margin-bottom:20px}.brand img{width:54px;height:54px;border-radius:50%}.brand strong,.brand span{display:block}.brand strong{font-size:19px}.brand span{margin-top:4px;color:#70858d;font-size:11px}label{display:flex;flex-direction:column;gap:5px;margin-top:12px;color:#4c6670;font-size:11px}input{height:40px;padding:0 11px;border:1px solid #c7dfe4;border-radius:10px;background:#f9fdfe;color:#13313b;font:inherit}button{height:40px;margin-top:16px;border:0;border-radius:10px;background:#0087a2;color:#fff;font-weight:650;cursor:pointer}button:disabled{opacity:.5}.secondary{width:100%;margin-top:8px;border:1px solid #c7dfe4;background:transparent;color:#287183}.status{min-height:18px;margin-top:12px;color:#6d838b;font-size:11px;line-height:18px}.error{color:#a33c3c}.hint{margin:18px 0 0;padding-top:13px;border-top:1px solid #deebee;color:#82959c;font-size:10px;line-height:16px}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand"><img src="build/icon.png" alt=""><div><strong>登录鲲鹏智能体</strong><span>大黄鱼智慧选育 · 科研办公 · 开放式智能体</span></div></div>
+    <form id="login">
+      <label>管理中心地址<input id="base-url" value="http://127.0.0.1:4789" required></label>
+      <label>邮箱<input id="email" type="email" autocomplete="username" required></label>
+      <label>密码<input id="password" type="password" autocomplete="current-password" required></label>
+      <button id="submit">登录并进入科研工作台</button>
+    </form>
+    <form id="change-password" hidden>
+      <label>临时密码<input id="current-password" type="password" required></label>
+      <label>设置新密码<input id="new-password" type="password" minlength="12" required></label>
+      <label>确认新密码<input id="confirm-password" type="password" minlength="12" required></label>
+      <button id="change-submit">修改密码并进入工作台</button>
+    </form>
+    <button id="admin" class="secondary" type="button">打开管理中心 / 初始化所有者</button>
+    <div id="status" class="status">正在连接管理中心…</div>
+    <p class="hint">密码只发送到所填写的管理中心，不保存在本机。登录会话只保留在当前进程，退出应用后需重新登录。非本机地址必须使用 HTTPS。</p>
+  </main>
+  <script>
+    const statusEl=document.getElementById('status');const submit=document.getElementById('submit');const base=document.getElementById('base-url');
+    const show=(text,error=false)=>{statusEl.textContent=text;statusEl.className='status'+(error?' error':'')};
+    window.dshControl.status().then(state=>{base.value=state.baseUrl||base.value;if(!state.ok)show('管理中心不可达：'+state.error,true);else if(!state.ownerConfigured)show('尚未初始化系统所有者，请先打开管理中心。',true);else show('管理中心连接正常。')});
+    document.getElementById('admin').addEventListener('click',()=>window.dshControl.openAdmin());
+    document.getElementById('login').addEventListener('submit',async event=>{event.preventDefault();submit.disabled=true;show('正在验证账号…');try{const password=document.getElementById('password').value;const result=await window.dshControl.login({baseUrl:base.value,email:document.getElementById('email').value,password});if(result.user.mustChangePassword){document.getElementById('login').hidden=true;document.getElementById('admin').hidden=true;document.getElementById('change-password').hidden=false;document.getElementById('current-password').value=password;show('这是临时密码，请先设置自己的新密码。')}else show('登录成功：'+result.user.name+'，正在启动…')}catch(error){show(String(error.message||error),true);submit.disabled=false}});
+    document.getElementById('change-password').addEventListener('submit',async event=>{event.preventDefault();const currentPassword=document.getElementById('current-password').value;const newPassword=document.getElementById('new-password').value;const confirm=document.getElementById('confirm-password').value;if(newPassword!==confirm){show('两次输入的新密码不一致',true);return}const button=document.getElementById('change-submit');button.disabled=true;try{await window.dshControl.changePassword({currentPassword,newPassword});show('密码已修改，正在启动科研工作台…')}catch(error){show(String(error.message||error),true);button.disabled=false}});
+  </script>
+</body>
+</html>
