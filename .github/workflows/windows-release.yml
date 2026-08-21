@@ -41,7 +41,7 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm run build
           Add-Content pnpm-workspace.yaml "`ninjectWorkspacePackages: true"
-          pnpm install --offline --no-frozen-lockfile
+          pnpm install --prefer-offline --no-frozen-lockfile
 
       - name: Prune Harness to production runtime
         shell: pwsh
