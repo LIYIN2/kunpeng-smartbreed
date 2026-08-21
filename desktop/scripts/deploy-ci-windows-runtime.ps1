@@ -10,6 +10,20 @@ if (-not (Test-Path (Join-Path $SourceRoot 'apps\cli\lib\bin.js'))) {
 }
 if (Test-Path $RuntimeRoot) { Remove-Item $RuntimeRoot -Recurse -Force }
 
+# The reviewed postinstall only restores a macOS executable bit and has already
+# run during the source install. In pnpm's injected deploy tree its relative
+# allowBuilds key becomes an absolute file:// key, which strictDepBuilds rejects.
+# Remove only this exact, known script from the disposable Windows source clone;
+# all other lifecycle-script approvals remain enforced.
+$SubprocessPackagePath = Join-Path $SourceRoot 'packages\subprocess\subprocess-local\package.json'
+$SubprocessPackage = Get-Content $SubprocessPackagePath -Raw | ConvertFrom-Json
+$ExpectedPostinstall = 'node scripts/ensure-spawn-helper.mjs'
+if ($SubprocessPackage.scripts.postinstall -ne $ExpectedPostinstall) {
+  throw "Unexpected subprocess-local postinstall: $($SubprocessPackage.scripts.postinstall)"
+}
+$SubprocessPackage.scripts.PSObject.Properties.Remove('postinstall')
+$SubprocessPackage | ConvertTo-Json -Depth 100 | Set-Content $SubprocessPackagePath -Encoding utf8NoBOM
+
 Push-Location $SourceRoot
 try {
   pnpm --filter @deepseek-ai/dsh deploy --prod $RuntimeRoot
