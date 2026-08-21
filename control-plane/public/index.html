@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>鲲鹏管理中心</title><link rel="stylesheet" href="/styles.css"></head>
+<body>
+  <div class="shell">
+    <header><div class="brand"><div class="mark">鲲</div><div><strong>鲲鹏管理中心</strong><span>账号 · 知识审核 · 信息反馈 · 审计日志</span></div></div><div id="identity"></div></header>
+    <main>
+      <section id="setup" class="card hidden"><h1>初始化系统所有者</h1><p>仅系统尚无账号时可执行。系统所有者固定为李寅。</p><form id="setup-form"><label>姓名<input name="name" value="李寅" required></label><label>邮箱<input name="email" value="liyin59375@gmail.com" readonly></label><label>初始化令牌<input name="bootstrapToken" type="password" required></label><label>新密码<input name="password" type="password" minlength="12" required></label><button>创建系统所有者</button></form></section>
+      <section id="login" class="card hidden"><h1>登录</h1><p>只有已由管理员创建且状态正常的账号可以进入。</p><form id="login-form"><label>邮箱<input name="email" type="email" required></label><label>密码<input name="password" type="password" required></label><button>登录</button></form></section>
+      <section id="password" class="card hidden"><h1>首次登录修改密码</h1><p>管理员创建的是临时密码。修改后才能进入知识、反馈和审核功能。</p><form id="password-form"><label>当前临时密码<input name="currentPassword" type="password" required></label><label>新密码<input name="newPassword" type="password" minlength="12" required></label><label>再次输入新密码<input name="confirmPassword" type="password" minlength="12" required></label><button>修改并进入管理中心</button></form></section>
+      <section id="dashboard" class="hidden dashboard">
+        <nav id="nav"><button data-view="knowledge">知识审核</button><button data-view="feedback">信息反馈</button><button data-view="users" data-role="admin">成员管理</button><button data-view="audit" data-role="admin">审计日志</button><button id="logout">退出</button></nav>
+        <div id="content"></div>
+      </section>
+      <div id="message" role="status"></div>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

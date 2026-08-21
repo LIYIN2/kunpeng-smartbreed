@@ -1,0 +1,5 @@
+interface:
+  display_name: "鲲鹏 RNA-seq 分析"
+  short_description: "从原始测序数据到差异表达与富集结果的受控分析工作流"
+  brand_color: "#008AA8"
+  default_prompt: "Use $kunpeng-rnaseq to validate my RNA-seq inputs and run the approved workflow."

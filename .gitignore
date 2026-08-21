@@ -1,0 +1,11 @@
+.DS_Store
+node_modules/
+.pnpm-store/
+outputs/
+desktop/bundle/
+control-plane/data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+__pycache__/
+*.pyc

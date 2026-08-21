@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+  <title>聊天</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; height: 100%;
+      background: #0b0b0f; color: #f5f5f7;
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      display: flex; flex-direction: column;
+    }
+    header {
+      display: flex; gap: 10px; align-items: center;
+      padding: 10px 14px; border-bottom: 1px solid #23232b;
+      flex-wrap: wrap;
+    }
+    header select, header input {
+      background: #17171e; color: #f5f5f7; border: 1px solid #2c2c36;
+      border-radius: 8px; padding: 7px 10px; font-size: 13px; outline: none;
+    }
+    header select:focus, header input:focus { border-color: #4d6bfe; }
+    header input#model { flex: 1; min-width: 160px; }
+    header select#reasoning { min-width: 100px; }
+    header .spacer { flex: 1; }
+    button {
+      background: #1d1d26; color: #e8e8ee; border: 1px solid #2c2c36;
+      border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer;
+    }
+    button:hover { background: #26262f; }
+    button.primary { background: #4d6bfe; border-color: #4d6bfe; color: #fff; }
+    button.primary:hover { background: #5c78ff; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    #key-panel {
+      background: #101017; border-bottom: 1px solid #23232b;
+      padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .key-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+    .key-row input[type=password] {
+      flex: 1; min-width: 200px; background: #17171e; color: #f5f5f7;
+      border: 1px solid #2c2c36; border-radius: 8px; padding: 7px 10px; outline: none;
+    }
+    .key-row input[type=password]:focus { border-color: #4d6bfe; }
+    .key-status { color: #8a8a94; font-size: 12px; }
+    .key-status.ok { color: #3fb950; }
+    .key-status.bad { color: #f85149; }
+    main {
+      flex: 1; overflow-y: auto; padding: 18px 16px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .msg { max-width: 82%; padding: 10px 13px; border-radius: 12px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+    .msg.user { align-self: flex-end; background: #2b3a9e; color: #fff; }
+    .msg.assistant { align-self: flex-start; background: #1a1a22; border: 1px solid #26262f; color: #e8e8ee; }
+    .msg.error { align-self: flex-start; background: #2a1518; border: 1px solid #5a2026; color: #ff9aa0; }
+    .msg .meta { display: block; font-size: 11px; color: #8a8a94; margin-bottom: 4px; }
+    .placeholder { color: #5f5f6a; text-align: center; margin-top: 60px; font-size: 14px; line-height: 2; }
+    footer {
+      display: flex; gap: 10px; align-items: flex-end;
+      padding: 12px 14px; border-top: 1px solid #23232b;
+    }
+    textarea {
+      flex: 1; resize: none; background: #17171e; color: #f5f5f7;
+      border: 1px solid #2c2c36; border-radius: 10px; padding: 10px 12px;
+      font-size: 14px; font-family: inherit; outline: none; line-height: 1.5;
+    }
+    textarea:focus { border-color: #4d6bfe; }
+    .loading::after { content: "…"; animation: blink 1s infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+  </style>
+</head>
+<body>
+  <header>
+    <select id="provider" title="提供方"></select>
+    <input id="model" list="model-list" placeholder="模型(可自定义输入)" title="模型名">
+    <datalist id="model-list"></datalist>
+    <select id="reasoning" title="推理强度(反应速度)">
+      <option value="">默认</option>
+      <option value="low">快 · 低强度</option>
+      <option value="medium">中 · 平衡</option>
+      <option value="high">慢 · 高强度</option>
+    </select>
+    <div class="spacer"></div>
+    <button id="key-btn">Key 设置</button>
+  </header>
+  <div id="key-panel" hidden>
+    <div class="key-row" id="custom-keys"></div>
+  </div>
+  <main id="messages">
+    <div class="placeholder">选择一个模型开始聊天<br>Key 缺失时点右上角「Key 设置」粘贴</div>
+  </main>
+  <footer>
+    <textarea id="input" rows="3" placeholder="输入消息,Enter 发送,Shift+Enter 换行"></textarea>
+    <button id="send" class="primary">发送</button>
+  </footer>
+  <script>
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      const messagesEl = $('messages');
+      const providerSel = $('provider');
+      const modelInput = $('model');
+      const modelList = $('model-list');
+      const reasoningSel = $('reasoning');
+      const input = $('input');
+      const sendBtn = $('send');
+      let providers = {};
+      let providerOrder = [];
+      let history = [];
+      let busy = false;
+      let assistantEl = null;
+      let assistantText = '';
+      const keyRows = {};
+
+      const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
+
+      function addMsg(role, text, meta) {
+        const el = document.createElement('div');
+        el.className = 'msg ' + role;
+        if (meta) {
+          const m = document.createElement('span');
+          m.className = 'meta';
+          m.textContent = meta;
+          el.appendChild(m);
+        }
+        el.textContent = text;
+        messagesEl.appendChild(el);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        return el;
+      }
+
+      async function loadConfig() {
+        const cfg = await window.dshChat.getConfig();
+        providers = {};
+        providerOrder = [];
+        providerSel.innerHTML = '';
+        $('custom-keys').innerHTML = '';
+        for (const p of cfg.providers) {
+          providers[p.id] = p;
+          providerOrder.push(p.id);
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = p.label;
+          providerSel.appendChild(opt);
+          addKeyRow(p.id, p.label, p.hasKey);
+        }
+        if (providers.deepseek) modelInput.value = providers.deepseek.defaultModel;
+        else if (providerOrder.length) modelInput.value = providers[providerOrder[0]].defaultModel || '';
+        updateModelList();
+      }
+
+      function addKeyRow(id, label, hasKey) {
+        const wrap = document.createElement('div');
+        wrap.className = 'key-row';
+        const lbl = document.createElement('span');
+        lbl.textContent = label + ' Key';
+        const input = document.createElement('input');
+        input.type = 'password';
+        input.placeholder = 'sk-...';
+        const status = document.createElement('span');
+        status.className = 'key-status ' + (hasKey ? 'ok' : 'bad');
+        status.textContent = hasKey ? '已配置' : '未配置';
+        const btn = document.createElement('button');
+        btn.textContent = '保存';
+        btn.addEventListener('click', () => saveKey(id, input, status));
+        wrap.appendChild(lbl);
+        wrap.appendChild(input);
+        wrap.appendChild(status);
+        wrap.appendChild(btn);
+        $('custom-keys').appendChild(wrap);
+        keyRows[id] = { input, status };
+      }
+
+      function updateModelList() {
+        const p = providers[providerSel.value];
+        modelList.innerHTML = '';
+        if (!p) return;
+        for (const m of p.models) {
+          const opt = document.createElement('option');
+          opt.value = m;
+          modelList.appendChild(opt);
+        }
+      }
+
+      async function saveKey(id, keyInput, statusEl) {
+        const key = (keyInput.value || '').trim();
+        if (!key) return;
+        await window.dshChat.saveKey(id, key);
+        keyInput.value = '';
+        statusEl.textContent = '已配置';
+        statusEl.className = 'key-status ok';
+      }
+
+      function send() {
+        if (busy) return;
+        const text = input.value.trim();
+        if (!text) return;
+        const providerId = providerSel.value;
+        const provider = providers[providerId];
+        if (!provider) return;
+        const model = modelInput.value.trim() || provider.defaultModel;
+        input.value = '';
+        history.push({ role: 'user', content: text });
+        addMsg('user', text);
+        assistantEl = addMsg('assistant', '', provider.label + ' · ' + model);
+        assistantEl.classList.add('loading');
+        assistantText = '';
+        busy = true;
+        sendBtn.disabled = true;
+        const requestId = uid();
+        window.dshChat.send({
+          requestId,
+          provider: providerId,
+          model,
+          reasoningEffort: reasoningSel.value,
+          messages: history.slice(-40),
+        });
+      }
+
+      window.dshChat.onChunk(({ requestId, text }) => {
+        assistantText += text;
+        if (assistantEl) {
+          assistantEl.classList.remove('loading');
+          assistantEl.textContent = assistantText;
+        }
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      });
+
+      window.dshChat.onDone(({ requestId, ok, error }) => {
+        busy = false;
+        sendBtn.disabled = false;
+        if (assistantEl) assistantEl.classList.remove('loading');
+        if (ok) {
+          history.push({ role: 'assistant', content: assistantText });
+        } else {
+          if (assistantEl) assistantEl.remove();
+          addMsg('error', '请求失败:' + error);
+          history.pop();
+        }
+        assistantEl = null;
+      });
+
+      providerSel.addEventListener('change', () => {
+        const p = providers[providerSel.value];
+        if (p) modelInput.value = p.defaultModel;
+        updateModelList();
+      });
+      sendBtn.addEventListener('click', send);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          send();
+        }
+      });
+      $('key-btn').addEventListener('click', () => {
+        $('key-panel').hidden = !$('key-panel').hidden;
+      });
+      loadConfig();
+    })();
+  </script>
+</body>
+</html>

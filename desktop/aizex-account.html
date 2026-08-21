@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #0b0b0f;
+      color: #f5f5f7;
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      width: 360px;
+      padding: 24px 28px;
+    }
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 4px;
+    }
+    .sub {
+      font-size: 12px;
+      color: #8a8a94;
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      color: #c8c8d0;
+      margin: 12px 0 4px;
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid #2a2a34;
+      background: #15151c;
+      color: #f5f5f7;
+      font-size: 13px;
+      outline: none;
+    }
+    input:focus {
+      border-color: #4d6bfe;
+    }
+    .btn {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #4d6bfe;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .btn:hover { background: #3f5be0; }
+    .status {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #7ee2a0;
+      min-height: 16px;
+      text-align: center;
+    }
+    .note {
+      margin-top: 14px;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #6f6f7a;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Aizex 账号</h1>
+    <div class="sub">保存后,打开 Aizex 聊天登录页时会自动填充。</div>
+    <label for="email">邮箱</label>
+    <input id="email" type="text" placeholder="请输入邮箱" autocomplete="off">
+    <label for="password">密码</label>
+    <input id="password" type="password" placeholder="请输入密码">
+    <button class="btn" id="save">保存</button>
+    <div class="status" id="status"></div>
+    <div class="note">
+      账号信息以明文保存在本机用户目录(~/.dsh/.aizex-account.json),仅用于自动填充登录页,不会上传到任何服务器。
+    </div>
+  </div>
+  <script>
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const save = document.getElementById('save');
+    const status = document.getElementById('status');
+
+    window.dshAizex.getAccount().then((acc) => {
+      if (acc) {
+        email.value = acc.email || '';
+        password.value = acc.password || '';
+      }
+    });
+
+    save.addEventListener('click', async () => {
+      const e = email.value.trim();
+      const p = password.value;
+      if (!e || !p) {
+        status.textContent = '请填写邮箱和密码';
+        status.style.color = '#f08080';
+        return;
+      }
+      await window.dshAizex.saveAccount(e, p);
+      status.textContent = '已保存 ✓';
+      status.style.color = '#7ee2a0';
+      setTimeout(() => window.close(), 800);
+    });
+  </script>
+</body>
+</html>

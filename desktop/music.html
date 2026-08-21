@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://raw.githubusercontent.com; script-src 'unsafe-inline'; style-src 'unsafe-inline'; media-src 'self' https://raw.githubusercontent.com; connect-src 'self' https://raw.githubusercontent.com">
+  <style>
+    :root {
+      --bg: #0d0e14;
+      --card: #151722;
+      --border: #232636;
+      --text: #f2f3f8;
+      --muted: #8a8da0;
+      --accent: #7c5cff;
+      --accent2: #4d6bfe;
+      --pink: #ff6b9d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      overflow: hidden;
+    }
+
+    /* ============ 迷你条(默认) ============ */
+    .mini-bar {
+      position: relative;
+      display: flex;
+      align-items: center;
+      height: 100%;
+      padding: 0 14px;
+      gap: 12px;
+      background: linear-gradient(135deg, #12141f 0%, #0d0e14 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      overflow: hidden;
+    }
+    .mini-cover {
+      width: 54px; height: 54px; border-radius: 12px; flex: none;
+      background: linear-gradient(145deg, #2a2b48, #171a2c);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .mini-cover svg { width: 26px; height: 26px; opacity: 0.95; }
+    .mini-cover.pulse { animation: mini-pulse 2.2s ease-in-out infinite; }
+    @keyframes mini-pulse {
+      0%, 100% { box-shadow: 0 8px 22px rgba(0,0,0,0.45); }
+      50% { box-shadow: 0 8px 26px rgba(124,92,255,0.55); }
+    }
+    .mini-meta { flex: 1; min-width: 0; }
+    .mini-title {
+      font-size: 13.5px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .mini-sub {
+      font-size: 11px; color: var(--muted); margin-top: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .mini-controls { display: flex; align-items: center; gap: 8px; flex: none; }
+    .mini-controls .cbtn { width: 32px; height: 32px; }
+    .mini-controls .cbtn svg { width: 15px; height: 15px; }
+    .mini-controls .play { width: 40px; height: 40px; }
+    .mini-controls .play svg { width: 18px; height: 18px; }
+    .mini-actions { display: flex; align-items: center; gap: 6px; flex: none; }
+    .mini-actions .cbtn { width: 30px; height: 30px; opacity: 0.75; }
+    .mini-actions .cbtn:hover { opacity: 1; }
+    .mini-actions .cbtn svg { width: 14px; height: 14px; }
+    .mini-progress {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+      background: rgba(255,255,255,0.05);
+    }
+    .mini-progress .fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--accent2), var(--pink));
+      transition: width 0.2s linear;
+    }
+
+    .cbtn {
+      width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+      background: rgba(255,255,255,0.06); color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s ease, transform 0.12s ease;
+    }
+    .cbtn:hover { background: rgba(255,255,255,0.12); transform: scale(1.06); }
+    .cbtn:active { transform: scale(0.94); }
+    .cbtn svg { width: 18px; height: 18px; }
+    .play {
+      width: 46px; height: 46px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 6px 18px rgba(93,92,255,0.45);
+    }
+
+    /* ============ 完整界面(展开) ============ */
+    .app { display: none; height: 100%; }
+    .player {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 36px;
+      position: relative;
+      overflow: hidden;
+    }
+    .compact-btn {
+      position: absolute; top: 18px; left: 18px; z-index: 3;
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 14px; border-radius: 99px; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05); color: var(--muted);
+      font-size: 12px; cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .compact-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .compact-btn svg { width: 13px; height: 13px; }
+    .glow {
+      position: absolute; width: 480px; height: 480px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(124,92,255,0.28), rgba(77,107,254,0.10) 55%, transparent 72%);
+      filter: blur(10px); pointer-events: none;
+      animation: breathe 7s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); opacity: 0.85; }
+      50% { transform: scale(1.12); opacity: 1; }
+    }
+    .cover {
+      width: 230px; height: 230px; border-radius: 20px;
+      background: linear-gradient(145deg, #2a2b48, #171a2c);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
+      position: relative; z-index: 1;
+      margin-bottom: 24px;
+      transition: transform 0.35s ease;
+    }
+    .cover.playing { animation: spin-disc 1.2s ease; }
+    @keyframes spin-disc {
+      0% { transform: rotate(-6deg) scale(1); }
+      60% { transform: rotate(4deg) scale(1.02); }
+      100% { transform: rotate(0) scale(1); }
+    }
+    .cover svg { width: 110px; height: 110px; opacity: 0.95; }
+    .title { font-size: 20px; font-weight: 600; margin-bottom: 6px; z-index: 1; }
+    .artist { font-size: 13px; color: var(--muted); margin-bottom: 8px; z-index: 1; }
+    .tag {
+      font-size: 11px; color: #b8aaff; background: rgba(124,92,255,0.16);
+      border: 1px solid rgba(124,92,255,0.35); padding: 3px 10px; border-radius: 99px;
+      z-index: 1; margin-bottom: 24px;
+    }
+    .controls { display: flex; align-items: center; gap: 22px; z-index: 1; }
+    .controls .play { width: 62px; height: 62px; box-shadow: 0 10px 30px rgba(93,92,255,0.45); }
+    .controls .play svg { width: 26px; height: 26px; }
+    .progress-row {
+      width: 100%; max-width: 420px; display: flex; align-items: center; gap: 12px;
+      z-index: 1; margin-top: 28px;
+    }
+    .time { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 40px; }
+    .time:last-child { text-align: right; }
+    .bar {
+      flex: 1; height: 5px; border-radius: 99px; background: #262940;
+      position: relative; cursor: pointer;
+    }
+    .bar .fill {
+      position: absolute; inset: 0 auto 0 0; width: 0%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent2), var(--pink));
+    }
+    .bar .knob {
+      position: absolute; top: 50%; left: 0%;
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #fff; transform: translate(-50%, -50%);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4); opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+    .bar:hover .knob { opacity: 1; }
+
+    .playlist {
+      flex: 1;
+      border-left: 1px solid var(--border);
+      background: #10121c;
+      display: flex; flex-direction: column;
+      min-width: 300px;
+    }
+    .pl-head {
+      padding: 20px 22px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .pl-title { font-size: 15px; font-weight: 600; }
+    .sync { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .sync .ok { color: #5cd88a; }
+    .sync .err { color: #f08080; }
+    .pl-list { flex: 1; overflow-y: auto; padding: 10px; }
+    .track {
+      display: flex; align-items: center; gap: 14px;
+      padding: 11px 12px; border-radius: 12px; cursor: pointer;
+      transition: background 0.13s ease;
+    }
+    .track:hover { background: rgba(255,255,255,0.05); }
+    .track.active { background: rgba(124,92,255,0.14); }
+    .num {
+      width: 30px; height: 30px; border-radius: 9px; flex: none;
+      background: rgba(255,255,255,0.05);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;
+    }
+    .track.active .num { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+    .track .meta { flex: 1; min-width: 0; }
+    .track .t-title { font-size: 13.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .track .t-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .track .eq { width: 16px; height: 14px; flex: none; display: flex; align-items: flex-end; gap: 2px; opacity: 0; }
+    .track.active .eq { opacity: 1; }
+    .track .eq span {
+      width: 3px; border-radius: 2px; background: var(--accent2);
+      animation: eq 1s ease-in-out infinite;
+    }
+    .track .eq span:nth-child(2) { animation-delay: 0.2s; }
+    .track .eq span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes eq {
+      0%, 100% { height: 4px; } 50% { height: 14px; }
+    }
+    .footer {
+      padding: 12px 22px;
+      border-top: 1px solid var(--border);
+      font-size: 10.5px; color: #6c6f80; line-height: 1.6;
+    }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-thumb { background: #2c2f42; border-radius: 99px; }
+
+    /* ============ 模式切换 ============ */
+    body.mini .mini-bar { display: flex; }
+    body.mini .app { display: none; }
+    body.expanded .mini-bar { display: none; }
+    body.expanded .app { display: flex; }
+  </style>
+</head>
+<body class="mini">
+  <!-- 迷你条 -->
+  <div class="mini-bar">
+    <div class="mini-cover" id="mini-cover">
+      <svg viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill="url(#g)" d="M25 8a17 17 0 0 1 17 17h-5.5a11.5 11.5 0 0 0-11.5-11.5V8z"/>
+        <path fill="url(#g)" d="M25 14a11 11 0 0 1 11 11h-4.6a6.4 6.4 0 0 0-6.4-6.4V14z"/>
+        <path fill="url(#g)" d="M25 20.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zm0 2.3a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4z"/>
+        <defs><linearGradient id="g" x1="0" y1="0" x2="50" y2="50"><stop stop-color="#8f7bff"/><stop offset="1" stop-color="#ff6b9d"/></linearGradient></defs>
+      </svg>
+    </div>
+    <div class="mini-meta">
+      <div class="mini-title" id="mini-title">—</div>
+      <div class="mini-sub" id="mini-sub">Kevin MacLeod</div>
+    </div>
+    <div class="mini-controls">
+      <button class="cbtn" id="mini-prev" title="上一首">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+      </button>
+      <button class="cbtn play" id="mini-play" title="播放/暂停">
+        <svg id="mini-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <button class="cbtn" id="mini-next" title="下一首">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg>
+      </button>
+    </div>
+    <div class="mini-actions">
+      <button class="cbtn" id="btn-expand" title="展开播放列表">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
+      <button class="cbtn" id="btn-hide" title="隐藏(音乐继续播放)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 11h16v2H4z"/></svg>
+      </button>
+      <button class="cbtn" id="btn-minimize" title="最小化">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 12h14v2H5z"/></svg>
+      </button>
+    </div>
+    <div class="mini-progress"><div class="fill" id="mini-fill"></div></div>
+  </div>
+
+  <!-- 完整界面 -->
+  <div class="app">
+    <div class="player">
+      <button class="compact-btn" id="btn-compact" title="收起为迷你条">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        收起
+      </button>
+      <div class="glow"></div>
+      <div class="cover" id="cover">
+        <svg viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill="url(#g)" d="M25 8a17 17 0 0 1 17 17h-5.5a11.5 11.5 0 0 0-11.5-11.5V8z"/>
+          <path fill="url(#g)" d="M25 14a11 11 0 0 1 11 11h-4.6a6.4 6.4 0 0 0-6.4-6.4V14z"/>
+          <path fill="url(#g)" d="M25 20.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zm0 2.3a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4z"/>
+          <defs><linearGradient id="g" x1="0" y1="0" x2="50" y2="50"><stop stop-color="#8f7bff"/><stop offset="1" stop-color="#ff6b9d"/></linearGradient></defs>
+        </svg>
+      </div>
+      <div class="title" id="title">—</div>
+      <div class="artist" id="artist">Kevin MacLeod</div>
+      <div class="tag" id="tag">加载中…</div>
+      <div class="controls">
+        <button class="cbtn" id="prev" title="上一首">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button class="cbtn play" id="play" title="播放/暂停">
+          <svg id="play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="cbtn" id="next" title="下一首">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg>
+        </button>
+      </div>
+      <div class="progress-row">
+        <span class="time" id="cur">0:00</span>
+        <div class="bar" id="bar"><div class="fill" id="fill"></div><div class="knob" id="knob"></div></div>
+        <span class="time" id="dur">0:00</span>
+      </div>
+    </div>
+    <div class="playlist">
+      <div class="pl-head">
+        <div class="pl-title">播放列表</div>
+        <div class="sync" id="sync"><span id="sync-icon" class="ok">●</span><span id="sync-text">同步中…</span></div>
+      </div>
+      <div class="pl-list" id="list"></div>
+      <div class="footer">音乐来源:Kevin MacLeod (incompetech.com) · CC BY 4.0<br>列表自动从 GitHub 仓库同步,加歌无需更新软件。</div>
+    </div>
+  </div>
+  <script>
+    const PLAYLIST_URL = 'https://raw.githubusercontent.com/LIYIN2/deepseek-harness-desktop/main/assets/music/playlist.json';
+    const BASE_URL = 'https://raw.githubusercontent.com/LIYIN2/deepseek-harness-desktop/main/assets/music/';
+    const audio = new Audio();
+    let tracks = [];
+    let index = 0;
+    let synced = false;
+
+    const $ = (id) => document.getElementById(id);
+    const miniTitle = $('mini-title'), miniSub = $('mini-sub'), miniCover = $('mini-cover');
+    const cover = $('cover'), titleEl = $('title'), artistEl = $('artist'), tagEl = $('tag');
+    const listEl = $('list'), syncIcon = $('sync-icon'), syncText = $('sync-text');
+    const fill = $('fill'), knob = $('knob'), curEl = $('cur'), durEl = $('dur');
+    const miniFill = $('mini-fill');
+
+    function fmt(sec) {
+      if (!isFinite(sec)) return '0:00';
+      const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+      return m + ':' + String(s).padStart(2, '0');
+    }
+
+    function setSync(ok, text) {
+      syncIcon.className = ok ? 'ok' : 'err';
+      syncText.textContent = text;
+    }
+
+    function updatePlayIcon(playing) {
+      const icon = playing ? '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
+      $('play-icon').innerHTML = icon;
+      $('mini-play-icon').innerHTML = icon;
+      miniCover.classList.toggle('pulse', playing);
+    }
+
+    function renderList() {
+      listEl.innerHTML = '';
+      tracks.forEach((t, i) => {
+        const div = document.createElement('div');
+        div.className = 'track' + (i === index ? ' active' : '');
+        div.innerHTML =
+          '<div class="num">' + (i + 1) + '</div>' +
+          '<div class="meta"><div class="t-title"></div><div class="t-sub"></div></div>' +
+          '<div class="eq"><span></span><span></span><span></span></div>';
+        div.querySelector('.t-title').textContent = t.title;
+        div.querySelector('.t-sub').textContent = (t.artist || '') + ' · ' + (t.tag || '');
+        div.addEventListener('click', () => { index = i; play(); });
+        listEl.appendChild(div);
+      });
+    }
+
+    function play() {
+      const t = tracks[index];
+      if (!t) return;
+      titleEl.textContent = t.title;
+      artistEl.textContent = t.artist || 'Kevin MacLeod';
+      tagEl.textContent = t.tag || '';
+      miniTitle.textContent = t.title;
+      miniSub.textContent = (t.artist || 'Kevin MacLeod') + (t.tag ? ' · ' + t.tag : '');
+      cover.classList.remove('playing');
+      void cover.offsetWidth;
+      cover.classList.add('playing');
+      audio.src = BASE_URL + encodeURIComponent(t.file);
+      audio.play().catch(() => {});
+      Array.from(listEl.children).forEach((el, i) => el.classList.toggle('active', i === index));
+    }
+
+    function toggle() {
+      if (audio.paused) audio.play(); else audio.pause();
+    }
+
+    function setMode(mode) {
+      document.body.classList.toggle('mini', mode === 'mini');
+      document.body.classList.toggle('expanded', mode === 'expanded');
+      if (mode === 'mini' && window.dshMusic) window.dshMusic.compact();
+      else if (mode === 'expanded' && window.dshMusic) window.dshMusic.expand();
+    }
+
+    $('play').addEventListener('click', toggle);
+    $('mini-play').addEventListener('click', toggle);
+    $('prev').addEventListener('click', () => { index = (index - 1 + tracks.length) % tracks.length; play(); });
+    $('mini-prev').addEventListener('click', () => { index = (index - 1 + tracks.length) % tracks.length; play(); });
+    $('next').addEventListener('click', () => { index = (index + 1) % tracks.length; play(); });
+    $('mini-next').addEventListener('click', () => { index = (index + 1) % tracks.length; play(); });
+    $('bar').addEventListener('click', (e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      if (audio.duration) audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration;
+    });
+    $('btn-expand').addEventListener('click', () => setMode('expanded'));
+    $('btn-compact').addEventListener('click', () => setMode('mini'));
+    $('btn-hide').addEventListener('click', () => { if (window.dshMusic) window.dshMusic.hide(); });
+    $('btn-minimize').addEventListener('click', () => { if (window.dshMusic) window.dshMusic.minimize(); });
+
+    audio.addEventListener('play', () => updatePlayIcon(true));
+    audio.addEventListener('pause', () => updatePlayIcon(false));
+    audio.addEventListener('ended', () => { index = (index + 1) % tracks.length; play(); });
+    audio.addEventListener('timeupdate', () => {
+      curEl.textContent = fmt(audio.currentTime);
+      durEl.textContent = fmt(audio.duration);
+      const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+      fill.style.width = pct + '%';
+      knob.style.left = pct + '%';
+      miniFill.style.width = pct + '%';
+    });
+    audio.addEventListener('loadedmetadata', () => {
+      durEl.textContent = fmt(audio.duration);
+    });
+
+    async function init() {
+      try {
+        const res = await fetch(PLAYLIST_URL, { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (data && Array.isArray(data.tracks) && data.tracks.length) {
+          tracks = data.tracks;
+          synced = true;
+        }
+      } catch (e) {
+        console.log('MUSIC SYNC FAIL: ' + String((e && e.message) || e));
+      }
+      if (synced) {
+        setSync(true, '已同步');
+      } else {
+        setSync(false, '同步失败,使用内置列表');
+        tracks = [];
+      }
+      if (!tracks.length) {
+        listEl.innerHTML = '<div style="padding:24px;font-size:12px;color:#6c6f80;">暂无曲目,请检查网络或稍后重试。</div>';
+        return;
+      }
+      renderList();
+      index = 0;
+      play();
+    }
+
+    init();
+  </script>
+</body>
+</html>
