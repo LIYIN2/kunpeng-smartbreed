@@ -68,7 +68,7 @@
       "target": ["nsis"],
       "extraResources": [
         {
-          "from": "bundle/dsh",
+          "from": "bundle/dsh-runtime",
           "to": "dsh",
           "filter": ["**/*", "!**/.git", "!**/.git/**/*"]
         },

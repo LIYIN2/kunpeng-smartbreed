@@ -41,13 +41,18 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm run build
 
+      - name: Prune Harness to production runtime
+        shell: pwsh
+        run: desktop/scripts/deploy-ci-windows-runtime.ps1
+
       - name: Verify offline runtime
         shell: pwsh
         run: |
           $required = @(
-            'desktop/bundle/dsh/node_modules',
-            'desktop/bundle/dsh/apps/cli/lib/bin.js',
-            'desktop/bundle/dsh/apps/web/dist/index.html',
+            'desktop/bundle/dsh-runtime/node_modules',
+            'desktop/bundle/dsh-runtime/lib/bin.js',
+            'desktop/bundle/dsh-runtime/.agents/skills',
+            'desktop/bundle/dsh-runtime/.agents/knowledge',
             'desktop/bundle/node-win-x64/node.exe'
           )
           $missing = $required | Where-Object { -not (Test-Path $_) }
@@ -80,7 +85,7 @@ jobs:
         run: |
           $resources = 'outputs/dist/win-unpacked/resources'
           $node = Join-Path $resources 'node/node.exe'
-          $cli = Join-Path $resources 'dsh/apps/cli/lib/bin.js'
+          $cli = Join-Path $resources 'dsh/lib/bin.js'
           $process = Start-Process -FilePath $node -ArgumentList @($cli, 'web') -WorkingDirectory (Join-Path $resources 'dsh') -PassThru
           $ready = $false
           try {

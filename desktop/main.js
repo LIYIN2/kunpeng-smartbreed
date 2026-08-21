@@ -423,9 +423,12 @@ async function ensureServer() {
     }
   }
 
-  const compiledCli = path.join(dshDir, 'apps', 'cli', 'lib', 'bin.js');
+  const compiledCli = [
+    path.join(dshDir, 'lib', 'bin.js'),
+    path.join(dshDir, 'apps', 'cli', 'lib', 'bin.js'),
+  ].find(candidate => fs.existsSync(candidate));
   const sourceCli = path.join(dshDir, 'apps', 'cli', 'src', 'bin.ts');
-  const serverArgs = fs.existsSync(compiledCli)
+  const serverArgs = compiledCli
     ? [compiledCli, 'web']
     : ['--import', 'tsx/esm', sourceCli, 'web'];
   log('starting server: ' + findNode() + ' ' + serverArgs.join(' '));

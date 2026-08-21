@@ -11,11 +11,12 @@ exports.default = async function beforePack(context) {
   if (process.platform !== 'win32') {
     throw new Error('Windows release builds must run on a Windows runner; macOS cross-builds are not releasable.');
   }
-  const dsh = path.join(context.packager.projectDir, 'bundle', 'dsh');
+  const dsh = path.join(context.packager.projectDir, 'bundle', 'dsh-runtime');
   const required = [
     path.join(dsh, 'node_modules'),
-    path.join(dsh, 'apps', 'cli', 'lib', 'bin.js'),
-    path.join(dsh, 'apps', 'web', 'dist'),
+    path.join(dsh, 'lib', 'bin.js'),
+    path.join(dsh, '.agents', 'skills'),
+    path.join(dsh, '.agents', 'knowledge'),
   ];
   const missing = required.filter((target) => !fs.existsSync(target));
   if (missing.length > 0) {
