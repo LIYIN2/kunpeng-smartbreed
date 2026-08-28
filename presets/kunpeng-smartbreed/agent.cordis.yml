@@ -155,6 +155,11 @@
 
 - id: tool-skill
   name: '@deepseek-ai/dsh-tool-skill'
+  config:
+    # Keep the catalog visible while avoiding a multi-thousand-token prompt
+    # on the shared local Qwen route. Full skill instructions remain available
+    # on demand through the skill tool.
+    catalogDescriptionMaxLength: 100
 
 # ── goals ───────────────────────────────────────────────────────────────────
 
