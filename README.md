@@ -1,6 +1,6 @@
 # 鲲鹏智能体 Kunpeng SmartBreed
 
-面向 **大黄鱼（*Larimichthys crocea*）智慧选育** 与课题组日常科研的开放式桌面智能体，基于开源 DeepSeek Harness 直接改造界面、科研模块、专项 skill、知识治理和管理体系。
+面向 **大黄鱼（*Larimichthys crocea*）智慧选育** 与水产科研办公的开放式科研智能体工作台，融合知识治理、文献检索、组学分析和智慧育种工作流，强调证据可追溯、计算可复现、决策可解释。
 
 <p align="center">
   <img src="assets/kunpeng-logo-512.png" width="160" alt="鲲鹏智育 Logo">
