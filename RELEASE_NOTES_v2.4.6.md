@@ -13,12 +13,14 @@
 
 - 已执行桌面主进程与发布脚本语法检查。
 - Windows NSIS 安装器已实际解包检查，运行时归档、Node 归档和完整预览 ZIP 均通过 7-Zip 完整性测试。
+- macOS Apple Silicon DMG 已在 macOS ARM 构建机实际生成；应用结构、内置 Node、运行时归档、Office 技能依赖和外层签名校验通过。未进行 Apple Developer ID 公证，也尚未完成真实登录后的人工 GUI 验收。
 - 随包 DSH 服务已通过本地 HTTP 健康检查；真实模型回答仍取决于用户的 DeepSeek 凭据、网络和所选模型。
 
 ## 下载与安装
 
 - `Kunpeng-Agent-2.4.6-x64.exe`：Windows x64 NSIS 安装包。
 - `Kunpeng-Agent-2.4.6-win-x64-preview.zip`：完整免安装目录。必须完整解压后，从目录内启动 `鲲鹏智能体.exe`，不要单独复制 EXE。
+- `Kunpeng-Agent-2.4.6-arm64.dmg`：macOS Apple Silicon（M1 / M2 / M3 / M4）安装包。打开 DMG 后拖入“应用程序”；首次启动会解压本地运行时。当前未公证，若被系统拦截，请在“系统设置 → 隐私与安全性”中确认允许。
 
 ## 第三方说明
 

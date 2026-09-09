@@ -8,15 +8,15 @@
 
 > 名字由来：**鲲鹏** 取自《庄子·逍遥游》「北冥有鱼，其名为鲲……化而为鸟，其名为鹏」，寓意从水产研究基础数据走向智能分析与育种决策的能力延展；**智育** 指以 AI 辅助水产智慧育种。English: **Kunpeng SmartBreed** represents AI-assisted aquaculture breeding and research.
 
-> 当前稳定版：**v2.4.6** · [下载 Windows 安装包](https://github.com/LIYIN2/kunpeng-smartbreed/releases/download/v2.4.6/Kunpeng-Agent-2.4.6-x64.exe) · [下载完整免安装包](https://github.com/LIYIN2/kunpeng-smartbreed/releases/download/v2.4.6/Kunpeng-Agent-2.4.6-win-x64-preview.zip) · [查看更新说明](RELEASE_NOTES_v2.4.6.md)
+> 当前稳定版：**v2.4.6** · [Windows 安装包](https://github.com/LIYIN2/kunpeng-smartbreed/releases/download/v2.4.6/Kunpeng-Agent-2.4.6-x64.exe) · [Windows 完整免安装包](https://github.com/LIYIN2/kunpeng-smartbreed/releases/download/v2.4.6/Kunpeng-Agent-2.4.6-win-x64-preview.zip) · [macOS Apple Silicon DMG](https://github.com/LIYIN2/kunpeng-smartbreed/releases/download/v2.4.6/Kunpeng-Agent-2.4.6-arm64.dmg) · [查看更新说明](RELEASE_NOTES_v2.4.6.md)
 
 ## 设计定位
 
-**鲲鹏智能体 = Windows 科研工作台（桌面端） + DeepSeek Harness（Agent 运行时） + DeepSeek 等基础模型（推理底座） + 育种领域知识库（references） + 专家工作流（技能）**。
+**鲲鹏智能体 = 科研工作台（Windows / macOS Apple Silicon 桌面端） + DeepSeek Harness（Agent 运行时） + DeepSeek 等基础模型（推理底座） + 育种领域知识库（references） + 专家工作流（技能）**。
 
 DeepSeek Harness 是开源 Agent 运行时，提供模型路由、工具调用、技能注册、会话管理、审批与沙箱等基础设施；鲲鹏桌面端在其上提供工作区、会话、附件、技能库和科研模块。项目将大黄鱼育种知识与专家工作流封装为领域层，让基础模型以「大黄鱼育种专家」的身份辅助文献检索、组学分析、数据治理与选配决策。更换底层模型（DeepSeek / 其他 OpenAI 兼容 API / 本地模型）时，领域知识与工作流可保持独立。
 
-普通用户可直接从 [Releases](https://github.com/LIYIN2/kunpeng-smartbreed/releases) 下载 Windows 桌面端；本仓库同时保存 Agent Preset、专业技能、课题组知识与可复现的安装脚本，供开发者和高级用户接入 DeepSeek Harness。
+普通用户可直接从 [Releases](https://github.com/LIYIN2/kunpeng-smartbreed/releases) 下载 Windows 桌面端或 macOS Apple Silicon 桌面端；本仓库同时保存 Agent Preset、专业技能、课题组知识与可复现的安装脚本，供开发者和高级用户接入 DeepSeek Harness。
 
 桌面端当前提供六个可交互科研工作台模块：
 
@@ -41,7 +41,7 @@ DeepSeek Harness 是开源 Agent 运行时，提供模型路由、工具调用�
 
 ## 版本
 
-- v2.4.6（当前）：修复附件删除无响应、附件发送后残留在下一条草稿及已删除附件被历史上传目录重新检索的问题；附件展示改为紧凑卡片。内置 DeepSeek Vision 网关，选择 `DeepSeek + Vision` 的 `DeepSeek-V4-Flash-Vision-Exp` 即可使用 DeepSeek 原生读图能力。Windows Release 同时提供安装器与完整预览包。
+- v2.4.6（当前）：修复附件删除无响应、附件发送后残留在下一条草稿及已删除附件被历史上传目录重新检索的问题；附件展示改为紧凑卡片。内置 DeepSeek Vision 网关，选择 `DeepSeek + Vision` 的 `DeepSeek-V4-Flash-Vision-Exp` 即可使用 DeepSeek 原生读图能力。Release 提供 Windows 安装器、Windows 完整预览包和 macOS Apple Silicon DMG。
 - v2.4.5：完善 GitHub 技能包一键导入、`/` 技能检索调用与技能库浏览管理；安装包预装当前技能库的 36 个技能，首次启动即可浏览和调用。修复运行中临时转向、会话消息重复/错位及上传路径混入文本的问题；优化自适应输入框与附件展示。Windows Release 同时提供已验收的安装器与完整预览包。
 - v2.4.0：知识库列表与完整正文分离读取，恢复纯文本段落以及富文本列表/表格/图片结构；控制面新增独立文献库只读查询接口；积分流水显示最近 8 条；Windows 预览运行时缓存签名更新。
 - v2.3.7：论坛输入重渲染与滚动分页稳定性修复、运行时缓存隔离与启动预热、工作台模块错误边界修复，以及知识调用设置和非鲲鹏模式策略隔离。
@@ -67,6 +67,12 @@ DeepSeek Harness 是开源 Agent 运行时，提供模型路由、工具调用�
 ### 完整免安装包
 
 下载 `Kunpeng-Agent-2.4.6-win-x64-preview.zip` 后，**完整解压**全部文件再运行其中的 `鲲鹏智能体.exe`。不要只复制 exe 文件；运行时和资源目录必须与 exe 保持同级。
+
+### macOS Apple Silicon（M1 / M2 / M3 / M4）
+
+1. 从 [v2.4.6 Release](https://github.com/LIYIN2/kunpeng-smartbreed/releases/tag/v2.4.6) 下载 `Kunpeng-Agent-2.4.6-arm64.dmg`，打开后将“鲲鹏智能体”拖到“应用程序”。
+2. 首次启动会把完整运行时解压到本机用户目录，时间取决于磁盘和网络之外的本机性能；后续启动复用该运行时。
+3. 当前 DMG 已做构建结构与完整性校验，但未进行 Apple Developer ID 公证。若 macOS 阻止首次打开，请在“系统设置 → 隐私与安全性”中确认允许，或按住 Control 点击应用后选择“打开”。
 
 ### 开发者 / 高级用户：安装到 DeepSeek Harness
 
